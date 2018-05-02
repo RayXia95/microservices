@@ -1,0 +1,143 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+
+	<groupId>com.revature</groupId>
+	<artifactId>zuul</artifactId>
+	<version>0.0.1-SNAPSHOT</version>
+	<packaging>jar</packaging>
+
+	<name>zuul</name>
+
+	<parent>
+		<groupId>org.springframework.boot</groupId>
+		<artifactId>spring-boot-starter-parent</artifactId>
+		<version>1.5.12.RELEASE</version>
+		<relativePath/> <!-- lookup parent from repository -->
+	</parent>
+
+	<properties>
+		<java.version>1.8</java.version>
+	</properties>
+
+	<dependencies>
+		<!-- DevTools for automatic reload -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-devtools</artifactId>
+			<scope>runtime</scope>
+		</dependency>
+		
+		<!-- Zuul, Eureka Client and Cloud -->
+		<dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-zuul</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-config</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.springframework.cloud</groupId>
+            <artifactId>spring-cloud-starter-eureka</artifactId>
+        </dependency>
+        
+        <!-- For Testing -->
+        <dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-test</artifactId>
+			<scope>test</scope>
+		</dependency>
+	</dependencies>
+
+	<dependencyManagement>
+		<dependencies>
+			<dependency>
+				<groupId>org.springframework.cloud</groupId>
+				<artifactId>spring-cloud-dependencies</artifactId>
+				<version>Dalston.SR3</version>
+				<type>pom</type>
+				<scope>import</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<plugins>
+			<!-- Docker Maven Plugin from Spotify -->
+			<!-- Abstracts the process of creating Docker images from Java projects -->
+			<plugin>
+				<groupId>com.spotify</groupId>
+				<artifactId>docker-maven-plugin</artifactId>
+				<version>0.4.10</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>build</goal>
+						</goals>
+					</execution>
+				</executions>
+				<!-- Docker Plugin Configuration -->
+				<configuration>
+					<!-- Dynamically generating image name from project name -->
+					<imageName>heroes/${project.artifactId}</imageName>
+					
+					<!-- Virtual Machine with Docker location -->
+					<dockerHost>https://192.168.99.100:2376</dockerHost>
+					
+					<!-- We are using HTTPS, so we need certificates -->
+					<dockerCertPath>C:\Users\Peter\.docker\machine\certs</dockerCertPath>
+					
+					<!-- All images are dependent on Java 8 -->
+					<baseImage>java:8</baseImage>
+					
+					<!-- When we do "docker run imageName" within the docker instance -->
+					<!-- It will run this as a command -->
+					<!-- java -jar /opt/NameOfTheJar.jar -->
+					<entryPoint>
+						["java", "-jar", "/opt/${project.build.finalName}.jar"]
+					</entryPoint>
+					
+					<!-- There is something called Docker Hub -->
+					<!-- You can push your images to the cloud for collaboration -->
+					<pushImage>false</pushImage>
+					
+					<!-- Resources -->
+					<resources>
+						<resource>
+							<targetPath>/opt/</targetPath>
+							<directory>${project.build.directory}</directory>
+							<excludes>
+								<exclude>target/**/*</exclude>
+								<exclude>pom.xml</exclude>
+								<exclude>*.iml</exclude>
+							</excludes>
+							<include>${project.build.finalName}.jar</include>
+						</resource>
+					</resources>
+				</configuration>
+			</plugin>
+			
+			<!-- CodeHaus MOJO -->
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>exec-maven-plugin</artifactId>
+				<configuration>
+					<!-- Change this to match path to actual Main class -->
+					<mainClass>com.revature.zuul.ZuulApplication</mainClass>
+				</configuration>
+			</plugin>
+			
+			<plugin>
+				<groupId>org.springframework.boot</groupId>
+				<artifactId>spring-boot-maven-plugin</artifactId>
+			</plugin>
+		</plugins>
+	</build>
+</project>
